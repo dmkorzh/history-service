@@ -1,18 +1,16 @@
-name: CI
-on:
-  push:
-  pull_request:
-    branches:
-      - master
+name: 'Project checker'
+on: push
 
 jobs:
-  ci:
+  check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/setup-go@v3
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Setup Go
+        uses: actions/setup-go@v3
         with:
           go-version: 1.18
-      - uses: actions/checkout@v3
       - name: Verify dependencies
         run: go mod verify
       - name: Linter
@@ -22,4 +20,3 @@ jobs:
           args: -p format,import,module
       - name: Build
         run: go build cmd
-      - name: golangci-lint
