@@ -1,0 +1,115 @@
+definitions:
+  handlers.HTTPError:
+    properties:
+      error:
+        example: error text
+        type: string
+    type: object
+  model.Call:
+    properties:
+      callType:
+        description: |-
+          Call type:
+          * in - incoming answered
+          * out - outgoing answered
+          * missed - incoming missed
+          * noanswer - outgoing missed
+        type: string
+      client:
+        description: Client phone number
+        type: integer
+      duration:
+        description: Call duration (0 if missed), [sec]
+        type: integer
+      employeeName:
+        description: Employee name
+        type: string
+      employeeNumber:
+        description: Employee phone number
+        type: integer
+      id:
+        description: Index number in result set
+        type: string
+      start:
+        description: Call start in UTC ('20211005T063228Z')
+        type: string
+      uid:
+        description: Call uuid
+        type: string
+      waiting:
+        description: Waiting for answer, [sec]
+        type: integer
+    type: object
+  model.Counts:
+    properties:
+      incoming:
+        description: Incoming calls count
+        type: integer
+      missed:
+        description: Incoming missed calls count
+        type: integer
+      noanswer:
+        description: Outgoing missed calls count
+        type: integer
+      outgoing:
+        description: Outgoing calls count
+        type: integer
+      total:
+        description: Total calls count
+        type: integer
+    type: object
+  model.HistoryResult:
+    properties:
+      calls:
+        items:
+          $ref: '#/definitions/model.Call'
+        type: array
+      counts:
+        $ref: '#/definitions/model.Counts'
+    type: object
+host: localhost:8081
+info:
+  contact: {}
+  title: Call history REST API
+  version: "1.0"
+paths:
+  /history/{department}:
+    get:
+      description: History calls and counts
+      parameters:
+      - description: Department ID
+        in: path
+        name: department
+        required: true
+        type: string
+      - description: Start of period (формат:20211005T063228Z)
+        in: query
+        name: start
+        required: true
+        type: string
+      - description: End of period (формат:20211005T063228Z)
+        in: query
+        name: end
+        required: true
+        type: string
+      - description: Calls response limit (default - 500)
+        in: query
+        name: limit
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/model.HistoryResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/handlers.HTTPError'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/handlers.HTTPError'
+      summary: Call history
+swagger: "2.0"

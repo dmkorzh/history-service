@@ -1,0 +1,18 @@
+kafka:
+  brokers:
+    - localhost:60246
+  topics:
+    calls: parsed-json
+    failed: failed
+clickhouse:
+  hosts:
+    - localhost:9000
+http:
+  listen: localhost:8081
+  accessList:
+    - 127.0.0.1
+log:
+  out: console              # directory or `console` for stdout output
+  age: 1                    # days
+  size: 100                 # megabytes
+  level: info

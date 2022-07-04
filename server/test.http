@@ -1,0 +1,27 @@
+# POST #
+POST http://localhost:8081/call/
+Content-Type: application/json
+
+{
+  "departmentID": "company1",
+  "departmentName": "Компания 1",
+  "start": "2022-05-17T15:42:21.795Z",
+  "connect": "2022-05-17T15:42:25.795Z",
+  "disconnect": "2022-05-17T15:44:24.795Z",
+  "callType": "outgoing",
+  "employee": {
+    "number": 79990001122,
+    "name": "Иван"
+  },
+  "client": 79201234566,
+  "uuid": "6937d911-5e36-4849-8415-c55c21fe2eea",
+  "additionalInfo": []
+}
+
+###
+
+# GET #
+GET http://localhost:8081/history/company1/?start=20220517T000000Z&end=20220518T000000Z
+Content-Type: application/json
+
+###
