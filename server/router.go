@@ -14,11 +14,10 @@ import (
 
 // @title    Call history REST API
 // @version  1.0
-// @host     localhost:8081
+// @host     localhost:50020
 func (s *HttpServer) makeRouter(router *gin.Engine) {
 	router.Use(logger(), gin.CustomRecovery(abortWithError))
 	router.GET("/history/:department/", s.ctrl.History)
-	router.POST("/call/", s.ctrl.SaveCall)
 }
 
 func logger() gin.HandlerFunc {

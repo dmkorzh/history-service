@@ -1,0 +1,8 @@
+FROM golang:1.18-alpine
+
+WORKDIR /app
+
+COPY . .
+RUN go mod download && go build -o rest-server ./cmd/rest-server
+
+CMD [ "/app/rest-server" ]

@@ -2,36 +2,29 @@ package server
 
 import (
 	"context"
-	"database/sql"
 	"embed"
 	"errors"
 	"net"
 	"net/http"
 	"time"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
-	"github.com/dmkorzh/test-project/server/handlers"
+	"github.com/ClickHouse/clickhouse-go/v2"
+	"github.com/dmkorzh/history-service/server/handlers"
 	"github.com/gin-gonic/gin"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 type HttpServer struct {
 	server   http.Server
 	listener net.Listener
 	ctrl     handlers.Controller
-	log      *logrus.Logger
 	done     chan struct{}
 }
 
 //go:embed sql
 var content embed.FS
 
-func NewServer(db *sql.DB, addr, msgTopic, failTopic string, accessList []net.IP) (*HttpServer, error) {
-	err := db.Ping()
-	if err != nil {
-		return nil, err
-	}
-
+func NewServer(conn clickhouse.Conn, addr string) (*HttpServer, error) {
 	addrToListen, err := net.ResolveTCPAddr("tcp", addr)
 	if err != nil {
 		return nil, err
@@ -52,21 +45,21 @@ func NewServer(db *sql.DB, addr, msgTopic, failTopic string, accessList []net.IP
 		},
 		listener: listen,
 		ctrl: handlers.Controller{
-			AccessList: accessList,
-			MsgTopic:   msgTopic,
-			FailTopic:  failTopic,
-			Database:   &handlers.Database{Driver: db, Table: "calls"},
+			Database: &handlers.Database{Driver: conn, Table: "calls"},
 		},
 		done: make(chan struct{}),
 	}
 	serv.makeRouter(router)
 	serv.ctrl.Templates, err = parseTemplates(router)
+	if err != nil {
+		return nil, err
+	}
+	log.Infof("Start listening HTTP on %s", serv.listener.Addr().String())
 	return serv, nil
 }
 
-func (s *HttpServer) Serve(ctx context.Context, msgC chan *kafka.Message) {
+func (s *HttpServer) Serve(ctx context.Context) {
 	errC := make(chan error)
-	s.ctrl.MsgC = msgC
 	go func() {
 		if err := s.server.Serve(s.listener); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			errC <- err
@@ -80,12 +73,12 @@ func (s *HttpServer) Serve(ctx context.Context, msgC chan *kafka.Message) {
 			stop = nil
 			ctx, canc := context.WithTimeout(context.Background(), 30*time.Second)
 			if err := s.server.Shutdown(ctx); err != nil {
-				s.log.Warnf("error shutting down: %s", err)
+				log.Warnf("error shutting down: %s", err)
 			}
 			canc()
 		case err := <-errC:
 			if err != nil {
-				s.log.Warnf("Error serving HTTP: %s", err.Error())
+				log.Warnf("Error serving HTTP: %s", err.Error())
 			}
 			close(s.done)
 			return

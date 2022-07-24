@@ -1,9 +1,5 @@
 package parser
 
-import (
-	log "github.com/sirupsen/logrus"
-)
-
 func ParseCall(raw RawCall) (pc ParsedCall, err error) {
 	pc.Set("departmentID", raw.Get("departmentID").Str)
 	pc.Set("departmentName", raw.Get("departmentName").Str)
@@ -29,6 +25,5 @@ func ParseCall(raw RawCall) (pc ParsedCall, err error) {
 	pc.Set("clientNumber", raw.Get("client").Uint())
 	pc.Set("employeeNumber", raw.Get("employee.number").Uint())
 	pc.Set("employeeName", raw.Get("employee.name").Str)
-	log.Infof("resulted call: %s", string(pc))
 	return pc, nil
 }
