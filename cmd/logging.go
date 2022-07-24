@@ -1,19 +1,17 @@
-package main
+package cmd
 
 import (
 	"errors"
 	"fmt"
 	"os"
-	"sync"
 	"time"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-func setupLogging() error {
+func SetupLogger(prefix string) error {
 	var logKey *viper.Viper
 	if viper.IsSet(KEY_LOG) {
 		logKey = viper.Sub(KEY_LOG)
@@ -45,7 +43,7 @@ func setupLogging() error {
 	if ts.Hour() == 0 && ts.Minute() == 0 {
 		fileStamp = ts.Format("2006-01-02")
 	}
-	fileName := logKey.GetString("out") + "/" + fileStamp + ".log"
+	fileName := logKey.GetString("out") + "/" + prefix + fileStamp + ".log"
 	rotateFile := &lumberjack.Logger{
 		Filename:   fileName,
 		MaxSize:    logKey.GetInt("size"),
@@ -69,14 +67,4 @@ func logLevelFromText(level string) (log.Level, error) {
 		return log.DebugLevel, fmt.Errorf("Invalid logging level: %s", level)
 	}
 	return l, nil
-}
-
-func logKafka(wg *sync.WaitGroup, producer *kafka.Producer) {
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		for evt := range producer.Logs() {
-			log.Infof("%s %s %s", evt.Name, evt.Tag, evt.Message)
-		}
-	}()
 }

@@ -3,12 +3,28 @@ package main
 import (
 	"errors"
 	"fmt"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/kafka"
+	. "github.com/dmkorzh/history-service/cmd"
 	log "github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
+
+func kafkaConfig() (kafka.ConfigMap, error) {
+	cfg := make(kafka.ConfigMap)
+	brokers := viper.GetStringSlice(KEY_BROKERS)
+	if brokers == nil {
+		return nil, fmt.Errorf("No kafka broker specified!")
+	}
+	_ = cfg.SetKey("bootstrap.servers", strings.Join(brokers, ","))
+	_ = cfg.SetKey("session.timeout.ms", 6000)
+	_ = cfg.SetKey("go.logs.channel.enable", true)
+	_ = cfg.SetKey("compression.type", "lz4")
+	return cfg, nil
+}
 
 func runKafkaWriter(msgC <-chan *kafka.Message, config *kafka.ConfigMap) (<-chan error, error) {
 	var (
@@ -75,4 +91,14 @@ func serveEventsQueue(p *kafka.Producer) {
 			log.Warnf("Unknown event: %s", ev)
 		}
 	}
+}
+
+func logKafka(wg *sync.WaitGroup, producer *kafka.Producer) {
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		for evt := range producer.Logs() {
+			log.Infof("%s %s %s", evt.Name, evt.Tag, evt.Message)
+		}
+	}()
 }

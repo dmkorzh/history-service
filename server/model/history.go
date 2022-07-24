@@ -1,11 +1,13 @@
 package model
 
 import (
-	"database/sql"
+	"context"
 	"strconv"
 	"strings"
 	"text/template"
 	"time"
+
+	"github.com/ClickHouse/clickhouse-go/v2"
 )
 
 type HistoryParams struct {
@@ -22,11 +24,11 @@ type HistoryResult struct {
 }
 
 type Counts struct {
-	Total    uint32 `json:"total"`    // Total calls count
-	In       uint32 `json:"incoming"` // Incoming calls count
-	Out      uint32 `json:"outgoing"` // Outgoing calls count
-	Missed   uint32 `json:"missed"`   // Incoming missed calls count
-	Noanswer uint32 `json:"noanswer"` // Outgoing missed calls count
+	Total    uint64 `json:"total"`    // Total calls count
+	In       uint64 `json:"incoming"` // Incoming calls count
+	Out      uint64 `json:"outgoing"` // Outgoing calls count
+	Missed   uint64 `json:"missed"`   // Incoming missed calls count
+	Noanswer uint64 `json:"noanswer"` // Outgoing missed calls count
 }
 
 type Call struct {
@@ -54,7 +56,7 @@ type Call struct {
 	Duration uint32
 }
 
-func GetHistory(params *HistoryParams, drv *sql.DB, tmpl *template.Template) (calls []Call, counts Counts, err error) {
+func GetHistory(params *HistoryParams, conn clickhouse.Conn, tmpl *template.Template) (calls []Call, counts Counts, err error) {
 	var query strings.Builder
 	err = tmpl.Execute(&query, params)
 	if err != nil {
@@ -67,7 +69,7 @@ func GetHistory(params *HistoryParams, drv *sql.DB, tmpl *template.Template) (ca
 		params.Limit,
 		params.Comment,
 	}
-	rows, err := drv.Query(query.String(), args...)
+	rows, err := conn.Query(context.Background(), query.String(), args...)
 	if err != nil {
 		return calls, counts, err
 	}

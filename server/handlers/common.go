@@ -1,26 +1,20 @@
 package handlers
 
 import (
-	"database/sql"
-	"net"
 	"strings"
 	"text/template"
 
-	"github.com/confluentinc/confluent-kafka-go/kafka"
+	"github.com/ClickHouse/clickhouse-go/v2"
 	"github.com/gin-gonic/gin"
 )
 
 type Controller struct {
-	AccessList []net.IP
-	MsgTopic   string
-	FailTopic  string
-	MsgC       chan<- *kafka.Message
-	Database   *Database
-	Templates  map[string]*template.Template
+	Database  *Database
+	Templates map[string]*template.Template
 }
 
 type Database struct {
-	Driver *sql.DB
+	Driver clickhouse.Conn
 	Table  string
 }
 

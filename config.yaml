@@ -1,18 +1,20 @@
-kafka:
+http-listen:
+  call-collector: call-collector:50010
+  rest-server: rest-server:50020
+redpanda:
   brokers:
-    - localhost:60246
+    - redpanda:9092
   topics:
     calls: parsed-json
     failed: failed
 clickhouse:
   hosts:
-    - localhost:9000
-http:
-  listen: localhost:8081
-  accessList:
-    - 127.0.0.1
+    - clickhouse-server:9000
+  database: history
+  user: default
+  password:
 log:
-  out: console              # directory or `console` for stdout output
-  age: 1                    # days
-  size: 100                 # megabytes
+  out: console                  # directory or `console` for stdout output
+  age: 1                        # days
+  size: 100                     # megabytes
   level: info

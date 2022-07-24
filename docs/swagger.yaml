@@ -82,12 +82,12 @@ paths:
         name: department
         required: true
         type: string
-      - description: Start of period (формат:20211005T063228Z)
+      - description: Start of period (format:20211005T063228Z)
         in: query
         name: start
         required: true
         type: string
-      - description: End of period (формат:20211005T063228Z)
+      - description: End of period (format:20211005T063228Z)
         in: query
         name: end
         required: true

@@ -1,0 +1,32 @@
+version: "3.6"
+
+services:
+  call-collector:
+    build:
+      context: .
+      dockerfile: Dockerfile-call-collector
+    container_name: call-collector
+    ports:
+      - "50010:50010"
+    depends_on:
+      - redpanda
+  rest-server:
+    build:
+      context: .
+      dockerfile: Dockerfile-rest-server
+    container_name: rest-server
+    ports:
+      - "50020:50020"
+    depends_on:
+      - clickhouse-server
+  clickhouse-server:
+    image: clickhouse/clickhouse-server:head-alpine
+    container_name: clickhouse-server-1
+    volumes:
+      - ./db:/docker-entrypoint-initdb.d
+  redpanda:
+    image: docker.redpanda.com/vectorized/redpanda:latest
+    container_name: redpanda-1
+    command: redpanda start --overprovisioned --smp 1 --memory 1G --reserve-memory 0M --node-id 0 --check=false && rpk topic create parsed-json --brokers=localhost:9092 && rpk topic create failed --brokers=localhost:9092
+    ports:
+      - "9092:9092"
